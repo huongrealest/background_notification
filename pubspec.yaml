@@ -12,7 +12,6 @@ dependencies:
     sdk: flutter
   flutter_local_notifications: ^9.7.0
   http: ^0.13.0
-  jitsi_meet_wrapper: 0.0.5
   uuid: ^3.0.7
 
 dependency_overrides:

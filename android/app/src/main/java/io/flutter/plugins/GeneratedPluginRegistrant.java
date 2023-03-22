@@ -35,10 +35,5 @@ public final class GeneratedPluginRegistrant {
     } catch(Exception e) {
       Log.e(TAG, "Error registering plugin flutter_local_notifications, com.dexterous.flutterlocalnotifications.FlutterLocalNotificationsPlugin", e);
     }
-    try {
-      flutterEngine.getPlugins().add(new dev.saibotma.jitsi_meet_wrapper.JitsiMeetWrapperPlugin());
-    } catch(Exception e) {
-      Log.e(TAG, "Error registering plugin jitsi_meet_wrapper, dev.saibotma.jitsi_meet_wrapper.JitsiMeetWrapperPlugin", e);
-    }
   }
 }

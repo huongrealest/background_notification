@@ -18,8 +18,6 @@ import 'token_monitor.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  showFlutterNotification(message);
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   print('Handling a background message ${message.messageId}');
   final data = message.data;
   final type = data['type'];

@@ -1,7 +1,3 @@
-// Copyright 2019 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:async';
 import 'dart:convert';
 
@@ -9,8 +5,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 
 import 'firebase_options.dart';
 import 'message.dart';
@@ -18,39 +16,59 @@ import 'message_list.dart';
 import 'permissions.dart';
 import 'token_monitor.dart';
 
-/// Working example of FirebaseMessaging.
-/// Please use this in order to verify messages are working in foreground, background & terminated state.
-/// Setup your app following this guide:
-/// https://firebase.google.com/docs/cloud-messaging/flutter/client#platform-specific_setup_and_requirements):
-///
-/// Once you've completed platform specific requirements, follow these instructions:
-/// 1. Install melos tool by running `flutter pub global activate melos`.
-/// 2. Run `melos bootstrap` in FlutterFire project.
-/// 3. In your terminal, root to ./packages/firebase_messaging/firebase_messaging/example directory.
-/// 4. Run `flutterfire configure` in the example/ directory to setup your app with your Firebase project.
-/// 5. Run the app on an actual device for iOS, android is fine to run on an emulator.
-/// 6. Use the following script to send a message to your device: scripts/send-message.js. To run this script,
-///    you will need nodejs installed on your computer. Then the following:
-///     a. Download a service account key (JSON file) from your Firebase console, rename it to "google-services.json" and add to the example/scripts directory.
-///     b. Ensure your device/emulator is running, and run the FirebaseMessaging example app using `flutter run --no-pub`.
-///     c. Copy the token that is printed in the console and paste it here: https://github.com/firebase/flutterfire/blob/01b4d357e1/packages/firebase_messaging/firebase_messaging/example/lib/main.dart#L32
-///     c. From your terminal, root to example/scripts directory & run `npm install`.
-///     d. Run `npm run send-message` in the example/scripts directory and your app will receive messages in any state; foreground, background, terminated.
-///  Note: Flutter API documentation for receiving messages: https://firebase.google.com/docs/cloud-messaging/flutter/receive
-///  Note: If you find your messages have stopped arriving, it is extremely likely they are being throttled by the platform. iOS in particular
-///  are aggressive with their throttling policy.
-///
-/// To verify that your messages are being received, you ought to see a notification appearon your device/emulator via the flutter_local_notifications plugin.
-/// Define a top-level named handler which background/terminated messages will
-/// call. Be sure to annotate the handler with `@pragma('vm:entry-point')` above the function declaration.
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await setupFlutterNotifications();
   showFlutterNotification(message);
-  // If you're going to use other Firebase services in the background, such as Firestore,
-  // make sure you call `initializeApp` before using other Firebase services.
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   print('Handling a background message ${message.messageId}');
+  final data = message.data;
+  final type = data['type'];
+  if (type != null) {
+    switch (type) {
+      case 'incoming_call':
+        const uuid = Uuid();
+        final params = <String, dynamic>{
+          'id': uuid.v4(),
+          'nameCaller': data['name'],
+          'appName': 'mobiAgri',
+          'avatar': data['avatar'],
+          'type': 1,
+          'handle': data['msisdn'],
+          'textAccept': 'Chấp nhận',
+          'textDecline': 'Từ chối',
+          'textMissedCall': 'Cuộc gọi nhỡ',
+          'textCallback': 'Gọi lại',
+          'duration': 60000,
+          'extra': data,
+          'android': <String, dynamic>{
+            'isCustomNotification': true,
+            'isShowLogo': true,
+            'isShowCallback': false,
+            'isShowMissedCallNotification': false,
+            'ringtonePath': 'system_ringtone_default',
+            'backgroundColor': '#0955fa',
+            'actionColor': '#4CAF50',
+          },
+          'ios': <String, dynamic>{
+            'handleType': 'generic',
+            'supportsVideo': true,
+            'maximumCallGroups': 1,
+            'maximumCallsPerCallGroup': 1,
+            'audioSessionMode': 'videoChat',
+            'audioSessionActive': false,
+            'audioSessionPreferredSampleRate': 44100.0,
+            'audioSessionPreferredIOBufferDuration': 0.005,
+            'supportsDTMF': true,
+            'supportsHolding': false,
+            'supportsGrouping': false,
+            'supportsUngrouping': false,
+          }
+        };
+        FlutterCallkitIncoming.showCallkitIncoming(params);
+        break;
+      default:
+    }
+  }
 }
 
 /// Create a [AndroidNotificationChannel] for heads up notifications
@@ -104,8 +122,6 @@ void showFlutterNotification(RemoteMessage message) {
           channel.id,
           channel.name,
           channelDescription: channel.description,
-          // TODO add a proper drawable resource to android, for now using
-          //      one that already exists in example app.
           icon: 'launch_background',
         ),
       ),

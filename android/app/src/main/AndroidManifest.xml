@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="io.flutter.plugins.firebase.messaging.example">
+    package="io.flutter.plugins.firebase.messaging.example"
+    xmlns:tools="http://schemas.android.com/tools">
+    
     <application
+    tools:replace="android:label"
         android:label="firebase_messaging_example"
         android:icon="@mipmap/ic_launcher">
         <activity
